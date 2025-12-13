@@ -9,6 +9,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(xacro REQUIRED)
 
+add_executable(gimbal_teleop_node src/gimbal_teleop_node.cpp)
+ament_target_dependencies(gimbal_teleop_nede
+  rclcpp
+  trajectory_msgs
+)
+
 install(
   DIRECTORY urdf launch config rviz
   DESTINATION share/${PROJECT_NAME}
