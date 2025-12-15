@@ -7,12 +7,18 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(xacro REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 add_executable(gimbal_teleop_node src/gimbal_teleop_node.cpp)
-ament_target_dependencies(gimbal_teleop_nede
+ament_target_dependencies(gimbal_teleop_node
   rclcpp
   trajectory_msgs
+)
+
+install(TARGETS
+  gimbal_teleop_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(
