@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -9,8 +9,12 @@ from launch.actions import TimerAction
 def generate_launch_description():
     pkg_share = FindPackageShare('gimbal_demo')
     xacro_path = PathJoinSubstitution([pkg_share, 'urdf', 'gimbal.xacro'])
+    world_path = '/home/gone/ros2_ws/src/dummy_demo/gimbal_demo/urdf/gimbal.sdf'
 
     robot_description = Command(['xacro ', xacro_path])
+
+    env_libgl = SetEnvironmentVariable('LIBGL_ALWAYS_SOFTWARE', '1')
+    env_gz_plugin = SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', '/opt/ros/humble/lib/')
 
     # 1. 로봇 모델 퍼블리셔
     robot_state_publisher = Node(
@@ -18,14 +22,16 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description}],
+        parameters=[{'robot_description': robot_description,
+                     'use_sim_time': True
+                     }],
     )
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare('ros_gz_sim'), '/launch/gz_sim.launch.py']
-        ),
-        launch_arguments={'gz_args': '-s -r -v 4 empty.sdf'}.items(),
+        ), #-v : 로그보기
+        launch_arguments={'gz_args': f'-s -r 4 {world_path}'}.items(),
     )
 
     spawn_entity = Node(
@@ -53,12 +59,12 @@ def generate_launch_description():
     )
 
     joint_state_spawner_delayed = TimerAction(
-        period=3.0,
+        period=10.0,
         actions=[joint_state_spawner]
     )
 
     gimbal_spawner_delayed = TimerAction(
-        period=4.0,
+        period=14.0,
         actions=[gimbal_spawner]
     )
 
@@ -73,19 +79,22 @@ def generate_launch_description():
         output='screen'
     )
 
-    foxglove_bridge = Node(
-        package='foxglove_bridge',
-        executable='foxglove_bridge',
-        name='foxglove_bridge',
-        output='screen',
+    rviz = Node(
+        package='rviz2',
+        executable='rviz2',
+        arguments=['--ros-args', '-p', 'use_sim_time:=true'],
+        output='screen'
     )
 
     return LaunchDescription([
+        env_libgl,
+        env_gz_plugin,
         gazebo_launch,
         robot_state_publisher,
         spawn_entity,
         joint_state_spawner_delayed,
         gimbal_spawner_delayed,
         gz_bridge,
-        foxglove_bridge, #
+        rviz
+        # foxglove_bridge, #
     ])

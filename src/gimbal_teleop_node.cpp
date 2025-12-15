@@ -56,11 +56,11 @@ class GimbalTeleopNode : public rclcpp::Node
             switch(key){
                 case 'w':
                 case 'W':
-                    target_pitch_ += step_rad_;
+                    target_pitch_ -= step_rad_;
                     break;
                 case 's':
                 case 'S':
-                    target_pitch_ -= step_rad_;
+                    target_pitch_ += step_rad_;
                     break;
                 case 'a':
                 case 'A':
