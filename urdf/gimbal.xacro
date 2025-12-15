@@ -34,7 +34,7 @@
   </link>
 
   <gazebo>
-      <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
           <parameters>$(find gimbal_demo)/config/controller.yaml</parameters>
       </plugin>
   </gazebo>
@@ -159,6 +159,14 @@
           <far>50.0</far>
         </clip>
       </camera>
+      <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/gimbal</namespace>
+          <argument>image:=/gimbal/image_raw</argument>
+          <argument>camera_info:=/gimbal/camera_info</argument>
+        </ros>
+        <frame_name>camera_optical_frame</frame_name>
+      </plugin>
       <topic>camera/image_raw</topic>
     </sensor>
   </gazebo>
@@ -167,7 +175,7 @@
 
   <ros2_control name="GimbalSystem" type="system">
     <hardware>
-      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
 
     <joint name="yaw_joint">

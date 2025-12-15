@@ -29,16 +29,15 @@ def generate_launch_description():
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare('ros_gz_sim'), '/launch/gz_sim.launch.py']
-        ), #-v : 로그보기
-        launch_arguments={'gz_args': f'-s -r 4 {world_path}'}.items(),
+            [FindPackageShare('gazebo_ros'), '/launch', '/gazebo.launch.py']
+        ),
     )
 
     spawn_entity = Node(
-        package='ros_gz_sim',
-        executable='create',
+        package='gazebo_ros',
+        executable='spawn_entity.py',
         arguments=['-topic', 'robot_description',
-                   '-name', 'gimbal'],
+                   '-entity', 'gimbal'],
         output='screen',
     )
 
@@ -68,16 +67,16 @@ def generate_launch_description():
         actions=[gimbal_spawner]
     )
 
-    gz_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-        ],
-        output='screen'
-    )
+    # gz_bridge = Node(
+    #     package='ros_gz_bridge',
+    #     executable='parameter_bridge',
+    #     arguments=[
+    #         '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+    #         '/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+    #         '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+    #     ],
+    #     output='screen'
+    # )
 
     rviz = Node(
         package='rviz2',
@@ -88,13 +87,13 @@ def generate_launch_description():
 
     return LaunchDescription([
         env_libgl,
-        env_gz_plugin,
+        # env_gz_plugin,
         gazebo_launch,
         robot_state_publisher,
         spawn_entity,
         joint_state_spawner_delayed,
         gimbal_spawner_delayed,
-        gz_bridge,
+        # gz_bridge,
         rviz
         # foxglove_bridge, #
     ])
