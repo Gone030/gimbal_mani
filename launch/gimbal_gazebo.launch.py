@@ -31,6 +31,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [FindPackageShare('gazebo_ros'), '/launch', '/gazebo.launch.py']
         ),
+        launch_arguments={'world': world_path}.items(),
     )
 
     spawn_entity = Node(
@@ -67,6 +68,20 @@ def generate_launch_description():
         actions=[gimbal_spawner]
     )
 
+    # teleop_node = Node(
+    #     package='gimbal_demo',
+    #     executable='teleop',
+    #     name='teleop',
+    #     output='screen',
+    # )
+
+    tracker_node = Node(
+        package='gimbal_demo',
+        executable='tracker',
+        name='tracker',
+        output='screen',
+    )
+
     # gz_bridge = Node(
     #     package='ros_gz_bridge',
     #     executable='parameter_bridge',
@@ -93,6 +108,8 @@ def generate_launch_description():
         spawn_entity,
         joint_state_spawner_delayed,
         gimbal_spawner_delayed,
+        # teleop_node,
+        tracker_node,
         # gz_bridge,
         rviz
         # foxglove_bridge, #

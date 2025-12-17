@@ -10,6 +10,7 @@
 
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
+#include <std_msgs/msg/string.hpp>
 
 using std::placeholders::_1;
 
@@ -17,13 +18,22 @@ class VisualTracker : public rclcpp::Node{
     public:
         VisualTracker() : Node("visual_tracker"){
             image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/camera/image_raw",
+                "/gimbal/gimbal_camera/image_raw",
                 rclcpp::SensorDataQoS(),
                 std::bind(&VisualTracker::image_callback, this, _1)
             );
 
             joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
-            "/joint_states", 10, std::bind(&VisualTracker::joint_callback, this, _1));
+                "/joint_states", 10,
+                std::bind(&VisualTracker::joint_callback, this, _1)
+            );
+
+            command_sub_ = this->create_subscription<std_msgs::msg::String>(
+                "/tracker/command", 10,
+                [this](const std_msgs::msg::String::SharedPtr msg){
+                    target_color_ = msg->data;
+                }
+            );
 
             traj_pub_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>(
                 "/gimbal_controller/joint_trajectory", 10
@@ -35,6 +45,8 @@ class VisualTracker : public rclcpp::Node{
 
             current_yaw_ = 0.0;
             current_pitch_ = 0.0;
+
+            target_color_ = "NONE";
 
             RCLCPP_INFO(this->get_logger(), "Visual tracking activating.");
         }
@@ -61,20 +73,32 @@ class VisualTracker : public rclcpp::Node{
             cv::Mat hsv_img, mask;
             cv::cvtColor(cv_ptr->image, hsv_img, cv::COLOR_BGR2HSV);
 
-            // ========붉은 색 마스크========
-            cv::Mat mask1;
-            cv::inRange(hsv_img, cv::Scalar(0, 120, 70), cv::Scalar(10, 255, 255), mask1);
+            if (target_color_ == "NONE") {
+                cv::putText(cv_ptr->image, "Target: NONE", cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
+                debug_image_pub_->publish(*cv_ptr->toImageMsg());
+                return;
+            }
 
-            cv::Mat mask2;
-            cv::inRange(hsv_img, cv::Scalar(170, 120, 70), cv::Scalar(180, 255, 255), mask2);
+            if (target_color_ == "BLUE") {
+                cv::inRange(hsv_img, cv::Scalar(100, 120, 70), cv::Scalar(140, 255, 255), mask);
+            } else if (target_color_ == "GREEN") {
+                cv::inRange(hsv_img, cv::Scalar(40, 120, 70), cv::Scalar(80, 255, 255), mask);
+            } else { // RED (기본값)
+                cv::Mat mask1, mask2;
+                cv::inRange(hsv_img, cv::Scalar(0, 120, 70), cv::Scalar(10, 255, 255), mask1);
+                cv::inRange(hsv_img, cv::Scalar(170, 120, 70), cv::Scalar(180, 255, 255), mask2);
+                mask = mask1 | mask2;
+            }
 
-            mask = mask1 | mask2;
 
             int center_x = msg->width / 2;
             int center_y = msg->height / 2;
 
             cv::line(cv_ptr->image, cv::Point(center_x - 20, center_y), cv::Point(center_x + 20, center_y), cv::Scalar(0, 255, 0), 2);
             cv::line(cv_ptr->image, cv::Point(center_x, center_y - 20), cv::Point(center_x, center_y + 20), cv::Scalar(0, 255, 0), 2);
+
+            cv::putText(cv_ptr->image, "Target: " + target_color_, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
+
             // ============================
 
             // 무게중심 찾기(Centroid)
@@ -107,8 +131,8 @@ class VisualTracker : public rclcpp::Node{
                     publish_trajectory(target_yaw, target_pitch);;
                 }
 
-                RCLCPP_INFO(this->get_logger(),"error x : %d, current yaw = %f", error_x, current_yaw_);
-                RCLCPP_INFO(this->get_logger(),"error y : %d, current pitch = %f", error_y, current_pitch_);
+                // RCLCPP_INFO(this->get_logger(),"error x : %d, current yaw = %f", error_x, current_yaw_);
+                // RCLCPP_INFO(this->get_logger(),"error y : %d, current pitch = %f", error_y, current_pitch_);
 
             }
             debug_image_pub_->publish(*cv_ptr->toImageMsg());
@@ -120,7 +144,7 @@ class VisualTracker : public rclcpp::Node{
             trajectory_msgs::msg::JointTrajectoryPoint p;
             p.positions = {yaw, pitch};
             p.time_from_start.sec = 0;
-            p.time_from_start.nanosec = 200000000;
+            p.time_from_start.nanosec = 100000000;
 
             traj.points.push_back(p);
             traj_pub_->publish(traj);
@@ -134,10 +158,13 @@ class VisualTracker : public rclcpp::Node{
 
         double last_sent_yaw_ = 0.0;
         double last_sent_pitch_ = 0.0;
+        std::string target_color_;
+
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
         rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr traj_pub_;
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr debug_image_pub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+        rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
 };
 
 int main(int argc, char **argv){

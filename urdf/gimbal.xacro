@@ -162,12 +162,12 @@
       <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
         <ros>
           <namespace>/gimbal</namespace>
-          <argument>image:=/gimbal/image_raw</argument>
-          <argument>camera_info:=/gimbal/camera_info</argument>
+          <argument>image:=image_raw</argument>
+          <argument>camera_info:=camera_info</argument>
         </ros>
         <frame_name>camera_optical_frame</frame_name>
       </plugin>
-      <topic>camera/image_raw</topic>
+      <!-- <topic>camera/image_raw</topic> -->
     </sensor>
   </gazebo>
 
