@@ -14,6 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_executable(teleop src/gimbal_teleop_node.cpp)
 ament_target_dependencies(teleop
@@ -22,8 +23,8 @@ ament_target_dependencies(teleop
   trajectory_msgs
 )
 
-add_executable(tracker src/gimbal_visual_tracker_color_node.cpp)
-ament_target_dependencies(tracker
+add_executable(color_tracker src/gimbal_visual_tracker_color_node.cpp)
+ament_target_dependencies(color_tracker
   rclcpp
   trajectory_msgs
   std_msgs
@@ -33,9 +34,17 @@ ament_target_dependencies(tracker
   OpenCV
 )
 
+add_executable(target_viz src/target_visualizer.cpp)
+ament_target_dependencies(target_viz
+  rclcpp
+  sensor_msgs
+  visualization_msgs
+)
+
 install(TARGETS
   teleop
-  tracker
+  color_tracker
+  target_viz
   DESTINATION lib/${PROJECT_NAME}
 )
 

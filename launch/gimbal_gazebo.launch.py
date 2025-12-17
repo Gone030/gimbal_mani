@@ -14,7 +14,6 @@ def generate_launch_description():
     robot_description = Command(['xacro ', xacro_path])
 
     env_libgl = SetEnvironmentVariable('LIBGL_ALWAYS_SOFTWARE', '1')
-    env_gz_plugin = SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', '/opt/ros/humble/lib/')
 
     # 1. 로봇 모델 퍼블리셔
     robot_state_publisher = Node(
@@ -30,6 +29,7 @@ def generate_launch_description():
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare('gazebo_ros'), '/launch', '/gazebo.launch.py']
+            # [FindPackageShare('gazebo_ros'), '/launch', '/gzserver.launch.py'] # 헤드리스
         ),
         launch_arguments={'world': world_path}.items(),
     )
@@ -82,6 +82,13 @@ def generate_launch_description():
         output='screen',
     )
 
+    target_viz_node = Node(
+        package='gimbal_demo',
+        executable='target_viz',
+        name='target_viz',
+        output='screen',
+    )
+
     # gz_bridge = Node(
     #     package='ros_gz_bridge',
     #     executable='parameter_bridge',
@@ -102,7 +109,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         env_libgl,
-        # env_gz_plugin,
         gazebo_launch,
         robot_state_publisher,
         spawn_entity,
@@ -110,7 +116,7 @@ def generate_launch_description():
         gimbal_spawner_delayed,
         # teleop_node,
         tracker_node,
+        target_viz_node,
         # gz_bridge,
         rviz
-        # foxglove_bridge, #
     ])
