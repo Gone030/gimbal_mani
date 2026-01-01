@@ -7,9 +7,9 @@ from launch_ros.substitutions import FindPackageShare
 from launch.actions import TimerAction
 
 def generate_launch_description():
-    pkg_share = FindPackageShare('gimbal_demo')
+    pkg_share = FindPackageShare('gimbal_mani')
     xacro_path = PathJoinSubstitution([pkg_share, 'urdf', 'gimbal.xacro'])
-    world_path = '/home/gone/ros2_ws/src/dummy_demo/gimbal_demo/urdf/gimbal.sdf'
+    world_path = '/home/gone/ros2_ws/src/dummy_demo/gimbal_mani/urdf/gimbal.sdf'
 
     robot_description = Command(['xacro ', xacro_path])
 
@@ -69,21 +69,21 @@ def generate_launch_description():
     )
 
     # teleop_node = Node(
-    #     package='gimbal_demo',
+    #     package='gimbal_mani',
     #     executable='teleop',
     #     name='teleop',
     #     output='screen',
     # )
 
     tracker_node = Node(
-        package='gimbal_demo',
+        package='gimbal_mani',
         executable='tracker',
         name='tracker',
         output='screen',
     )
 
     target_viz_node = Node(
-        package='gimbal_demo',
+        package='gimbal_mani',
         executable='target_viz',
         name='target_viz',
         output='screen',

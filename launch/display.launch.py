@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    pkg_share = FindPackageShare('gimbal_demo')
+    pkg_share = FindPackageShare('gimbal_mani')
     xacro_path = PathJoinSubstitution([pkg_share, 'urdf', 'gimbal.xacro'])
 
     robot_description = Command([
